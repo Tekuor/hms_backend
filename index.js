@@ -42,11 +42,13 @@ app.post('/api/user/signin',(req,res)=>{
         User.findOne({'email':req.body.email}, (err,user)=>{
                 if(!user) res.status(400).send({message:'User not found'})
 
-                user.comparePassword(req.body.password, (err,isMatch)=>{
-                        if(err) throw err;
-                        if(!isMatch) res.status(400).send({'message':'Wrong Password'});
-                        res.status(200).send({'message':'Login Successful','data':user});
-                })
+                if(req.body.password){
+                        user.comparePassword(req.body.password, (err,isMatch)=>{
+                                if(err) throw err;
+                                if(!isMatch) res.status(400).send({'message':'Wrong Password'});
+                                res.status(200).send({'message':'Login Successful','data':user});
+                        })
+                }
         })
 
 })
@@ -145,6 +147,17 @@ app.get('/api/users',(req, res) => {
         }
         else{
                 res.status(200).send({'message':'Users retrieved','data':users});
+        }
+        });
+});
+
+app.get('/api/all/issues',(req, res) => {
+        Issue.find({},(err, issues) =>{
+        if(err){
+                res.status(400).send({'message':'Issues not retrieved'});
+        }
+        else{
+                res.status(200).send({'message':'Issues retrieved','data':issues});
         }
         });
 });
