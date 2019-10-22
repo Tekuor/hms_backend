@@ -161,3 +161,14 @@ app.get('/api/all/issues',(req, res) => {
         }
         });
 });
+
+app.post('/api/find/issues',(req, res) => {
+        Issue.find({status:req.body.status},(err, issues) =>{
+        if(err){
+                res.status(400).send({'message':'Issues not retrieved'});
+        }
+        else{
+                res.status(200).send({'message':'Issues retrieved','data':issues});
+        }
+        });
+});
