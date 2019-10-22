@@ -5,13 +5,17 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 let SALT = 10;
 const jwt = require("jsonwebtoken");
+let config = require("./config.js");
+
 
 let middleware = require("./middleware");
 
-const mongourl = "mongodb://localhost:27017/gifty";
+//const mongourl = "mongodb://localhost:27017/gifty";
+
+const mongourl = 'mongodb://user1:hospitalUser1@ds135068.mlab.com:35068/hospital_system';
+
 
 const app = express();
-const SECRET_KEY = "secretkey23456";
 
 mongoose.connect(mongourl).then(
   () => {
@@ -42,7 +46,7 @@ app.post("/api/user/signup", (req, res) => {
     .save()
     .then(user => {
       const options = { expiresIn: "1d", issuer: "gifty" };
-      const accessToken = jwt.sign({ id: user._id }, SECRET_KEY, options);
+      const accessToken = jwt.sign({ id: user._id }, config.SECRET_KEY, options);
 
       res.status(201).send({
         message: "User successfully added",
@@ -63,13 +67,12 @@ app.post("/api/user/signin", (req, res) => {
       user.comparePassword(req.body.password, (err, isMatch) => {
         if (err) throw err;
         if (!isMatch) res.status(400).send({ message: "Wrong Password" });
-        const options = { expiresIn: "d", issuer: "gifty" };
-        const accessToken = jwt.sign({ id: user._id }, SECRET_KEY, options);
+        const options = { expiresIn: "1d", issuer: "gifty" };
+        const accessToken = jwt.sign({ id: user._id }, config.SECRET_KEY, options);
         res.status(200).send({
           message: "Login Successful",
           data: user,
-          token: accessToken,
-          expires_in: expiresIn
+          token: accessToken
         });
       });
     }
@@ -197,19 +200,19 @@ app.get("/api/users", (req, res) => {
   });
 });
 
-app.get("/api/all/issues", (req, res) => {
-  if (req.isAuthenticated) {
-    Issue.find({}, (err, issues) => {
-      if (err) {
-        res.status(400).send({ message: "Issues not retrieved" });
-      } else {
-        res.status(200).send({ message: "Issues retrieved", data: issues });
-      }
-    });
-  } else {
-    res.status(401).send({ message: "Invalid access token" });
-  }
-});
+// app.get("/api/all/issues", (req, res) => {
+//   if (req.isAuthenticated) {
+//     Issue.find({}, (err, issues) => {
+//       if (err) {
+//         res.status(400).send({ message: "Issues not retrieved" });
+//       } else {
+//         res.status(200).send({ message: "Issues retrieved", data: issues });
+//       }
+//     });
+//   } else {
+//     res.status(401).send({ message: "Invalid access token" });
+//   }
+// });
 
 app.post("/api/find/issues", (req, res) => {
   Issue.find({ status: req.body.status }, (err, issues) => {
