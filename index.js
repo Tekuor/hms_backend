@@ -4,10 +4,14 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 let SALT = 10;
+const  jwt  =  require('jsonwebtoken');
+
+let middleware = require('./middleware');
 
 const mongourl = 'mongodb://user1:hospitalUser1@ds135068.mlab.com:35068/hospital_system';
 
 const app = express();
+const SECRET_KEY = "secretkey23456";
 
 mongoose.connect(mongourl).then(
         () => {console.log('Database connection is successful') },
@@ -20,6 +24,7 @@ const { Reply } =  require('./models/reply')
 
 app.use(bodyParser.json());
 app.use(cors());
+app.use(middleware);
 
 const port = process.env.PORT || 4000;
 
@@ -30,7 +35,11 @@ app.listen(port,()=>{
 app.post('/api/user/signup',(req,res)=>{
         var user = new User(req.body);
         user.save().then( user => {
-                res.status(201).send({'message': 'User successfully added','data':user});
+                const  expiresIn  =  24  *  60  *  60;
+                const  accessToken  =  jwt.sign({ id:  user._id }, SECRET_KEY, {
+                        expiresIn:  expiresIn
+                });
+                res.status(201).send({'message': 'User successfully added','data':user,"token":  accessToken, "expires_in":  expiresIn});
         })
         .catch(err => {
                 res.status(400).send("Error when saving to database");
@@ -46,7 +55,11 @@ app.post('/api/user/signin',(req,res)=>{
                         user.comparePassword(req.body.password, (err,isMatch)=>{
                                 if(err) throw err;
                                 if(!isMatch) res.status(400).send({'message':'Wrong Password'});
-                                res.status(200).send({'message':'Login Successful','data':user});
+                                const  expiresIn  =  24  *  60  *  60;
+                                const  accessToken  =  jwt.sign({ id:  user._id }, SECRET_KEY, {
+                                expiresIn:  expiresIn
+                                });
+                                res.status(200).send({'message':'Login Successful','data':user,"token":  accessToken, "expires_in":  expiresIn});
                         })
                 }
         })
@@ -151,7 +164,7 @@ app.get('/api/users',(req, res) => {
         });
 });
 
-app.get('/api/all/issues',(req, res) => {
+app.get('/api/all/issues', (req, res) => {
         Issue.find({},(err, issues) =>{
         if(err){
                 res.status(400).send({'message':'Issues not retrieved'});
