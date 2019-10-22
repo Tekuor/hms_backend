@@ -52,10 +52,45 @@ app.post("/api/user/signin", (req, res) => {
 });
 
 app.get("/api/users/:id", (req, res) => {
+  if (req.isAuthenticated) {
   var id = req.params.id;
   User.findById(id, (err, user) => {
     if (!user) res.status(400).send({ message: "User not found" });
 
     res.status(200).send({ message: "User Found", data: user });
   });
+}else {
+  res.status(401).send({ message: "Invalid access token" });
+}
+});
+
+
+app.put("/api/user/:id", (req, res) => {
+  if (req.isAuthenticated) {
+  User.findByIdAndUpdate(
+    req.params.id,
+    req.body,
+    { new: true },
+    (err, issue) => {
+      if (err) return res.status(500).send(err);
+      res.status(200).send({ message: "User Updated", data: issue });
+    }
+  );
+  }else {
+    res.status(401).send({ message: "Invalid access token" });
+  }
+});
+
+app.get("/api/users", (req, res) => {
+  if (req.isAuthenticated) {
+  User.find({ user_type: "patient" }, (err, users) => {
+    if (err) {
+      res.status(400).send({ message: "Users not retrieved" });
+    } else {
+      res.status(200).send({ message: "Users retrieved", data: users });
+    }
+  });
+  }else {
+    res.status(401).send({ message: "Invalid access token" });
+  }
 });
